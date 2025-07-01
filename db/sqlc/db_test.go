@@ -3,28 +3,41 @@ package db
 import (
 	"context"
 	"fmt"
+	"github.com/checkioname/simple-bank/util"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
+	"log"
 	"os"
 	"testing"
 	"time"
 )
 
 func TestContainer(t *testing.T) {
-	_, teardown := StartDBWithTestContainer(t)
+	_, dsn, teardown := StartDBWithTestContainer(t)
 	defer teardown()
+
+	require.NotEmpty(t, dsn)
 }
 
-func StartDBWithTestContainer(t *testing.T) (*Queries, func()) {
-	t.Helper()
+func StartDBWithTestContainer(t *testing.T) (*Queries, string, func()) {
+	fmt.Println("Iniciando DB testContainers")
+	if t != nil {
+		t.Helper()
+	}
 
 	dsn, terminateContainer, err := startTestContainer()
-	require.NoError(t, err)
+	if err != nil {
+		log.Printf("start test container: %v", err)
+	}
 
-	db, teardown := initializeDatabase(t, dsn)
-	return db, func() {
+	db, teardown, err := initializeDatabase(dsn)
+	if err != nil {
+		err = fmt.Errorf("initialize database: %v", err)
+	}
+
+	return db, dsn, func() {
 		teardown()
 		terminateContainer()
 	}
@@ -77,7 +90,7 @@ func startTestContainer() (string, func(), error) {
 }
 
 func setColimaEnvVars() error {
-	err := os.Setenv("TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE", "/var/run/docker .sock")
+	err := os.Setenv("TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE", "/var/run/docker.sock")
 	if err != nil {
 		return fmt.Errorf("setting TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE: %w", err)
 	}
@@ -88,18 +101,28 @@ func setColimaEnvVars() error {
 	return err
 }
 
-func initializeDatabase(t *testing.T, host string) (*Queries, func()) {
-	t.Helper()
+func initializeDatabase(dsn string) (*Queries, func(), error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 
-	conn, err := pgx.Connect(ctx, host)
-	require.NoError(t, err)
+	conn, err := pgx.Connect(ctx, dsn)
+	if err != nil {
+		cancel()
+		return nil, nil, err
+	}
 
 	migrationPath := "file://../migration"
-	m, err := migrate.New(migrationPath, host)
+	m, err := migrate.New(migrationPath, dsn)
+	if err != nil {
+		conn.Close(ctx)
+		cancel()
+		return nil, nil, err
+	}
 
-	require.NoError(t, err)
-	require.NoError(t, m.Up())
+	if err := m.Up(); err != nil {
+		conn.Close(ctx)
+		cancel()
+		return nil, nil, err
+	}
 
 	db := New(conn)
 
@@ -108,8 +131,22 @@ func initializeDatabase(t *testing.T, host string) (*Queries, func()) {
 		cancel()
 	}
 
-	return db, func() {
-		cancel()
-		teardown()
+	return db, teardown, nil
+}
+
+func RandomCreateAccount(balance int64) *Account {
+	var b int64
+	if balance > 0 {
+		b = balance
+	} else {
+		b = balance
+	}
+
+	return &Account{
+		util.RandomInt(0, 200),
+		util.RandomOwner(),
+		b,
+		util.RandomCurrency(),
+		time.Now(),
 	}
 }

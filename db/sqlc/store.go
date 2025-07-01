@@ -9,8 +9,6 @@ import (
 type Store interface {
 	Querier
 	TransferTx(ctx context.Context, arg TransferTxParams) (TransferTxResult, error)
-	//CreateUserTx(ctx context.Context, arg CreateUserTxParams) (CreateUserTxResult, error)
-	//VerifyEmailTx(ctx context.Context, arg VerifyEmailTxParams) (VerifyEmailTxResult, error)
 }
 
 type SQLStore struct {
@@ -18,7 +16,6 @@ type SQLStore struct {
 	*Queries
 }
 
-// NewStore creates a new store
 func NewStore(connPool *pgxpool.Pool) Store {
 	return &SQLStore{
 		connPool: connPool,
@@ -26,8 +23,8 @@ func NewStore(connPool *pgxpool.Pool) Store {
 	}
 }
 
-func (store *SQLStore) execTx(ctx context.Context, fn func(*Queries) error) error {
-	tx, err := store.connPool.Begin(ctx)
+func (s *SQLStore) execTx(ctx context.Context, fn func(*Queries) error) error {
+	tx, err := s.connPool.Begin(ctx)
 	if err != nil {
 		return err
 	}
