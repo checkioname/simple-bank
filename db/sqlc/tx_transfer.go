@@ -54,17 +54,14 @@ func (s *SQLStore) TransferTx(ctx context.Context, arg TransferTxParams) (Transf
 		}
 
 		// TO-DO`S: update account balance (involves deadlock)
-		result.ToAccount, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{arg.Amount, arg.ToAccountID})
-		if err != nil {
-			return fmt.Errorf("update balance: %v", err)
+		if arg.ToAccountID < arg.FromAccountID {
+			result.ToAccount, result.FromAccount, err = addMoney(ctx, q, arg.ToAccountID, arg.Amount, arg.FromAccountID, -arg.Amount)
+
+		} else {
+			result.FromAccount, result.ToAccount, err = addMoney(ctx, q, arg.FromAccountID, -arg.Amount, arg.ToAccountID, arg.Amount)
 		}
 
-		result.FromAccount, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{-arg.Amount, arg.FromAccountID})
-		if err != nil {
-			return fmt.Errorf("update balance: %v", err)
-		}
-		return nil
-
+		return err
 	}); err != nil {
 		return result, fmt.Errorf("create transfer tx: %v", err)
 	}
@@ -84,12 +81,15 @@ func addMoney(
 		Amount: amount1,
 	})
 	if err != nil {
-		return
+		return account1, account2, fmt.Errorf("add account balance: %v", err)
 	}
 
 	account2, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{
 		ID:     accountID2,
 		Amount: amount2,
 	})
-	return
+	if err != nil {
+		return account1, account2, fmt.Errorf("add account balance: %v", err)
+	}
+	return account1, account2, nil
 }
