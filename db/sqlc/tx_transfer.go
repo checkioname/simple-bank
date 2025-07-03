@@ -33,17 +33,36 @@ func (s *SQLStore) TransferTx(ctx context.Context, arg TransferTxParams) (Transf
 			ToAccountID:   arg.ToAccountID,
 			Amount:        arg.Amount,
 		})
-
 		if err != nil {
 			return fmt.Errorf("create transfer: %v", err)
 		}
 
 		result.FromEntry, err = q.CreateEntry(ctx, CreateEntryParams{
 			AccountID: arg.FromAccountID,
+			Amount:    -arg.Amount,
+		})
+		if err != nil {
+			return fmt.Errorf("create entry: %v", err)
+		}
+
+		result.ToEntry, err = q.CreateEntry(ctx, CreateEntryParams{
+			AccountID: arg.ToAccountID,
 			Amount:    arg.Amount,
 		})
+		if err != nil {
+			return fmt.Errorf("create entry: %v", err)
+		}
 
 		// TO-DO`S: update account balance (involves deadlock)
+		result.ToAccount, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{arg.Amount, arg.ToAccountID})
+		if err != nil {
+			return fmt.Errorf("update balance: %v", err)
+		}
+
+		result.FromAccount, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{-arg.Amount, arg.FromAccountID})
+		if err != nil {
+			return fmt.Errorf("update balance: %v", err)
+		}
 		return nil
 
 	}); err != nil {

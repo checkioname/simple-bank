@@ -3,8 +3,10 @@ package db
 import (
 	"context"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/stretchr/testify/require"
 	"log"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -34,4 +36,13 @@ func TestMain(m *testing.M) {
 		teardown()
 	}
 	os.Exit(code)
+}
+
+func clearTables(ctx context.Context, t *testing.T) {
+	t.Helper()
+	tables := []string{"transfers", "entries", "accounts"}
+
+	query := "TRUNCATE TABLE " + strings.Join(tables, ", ") + " RESTART IDENTITY CASCADE;"
+	_, err := testQueries.db.Exec(ctx, query)
+	require.NoError(t, err)
 }
