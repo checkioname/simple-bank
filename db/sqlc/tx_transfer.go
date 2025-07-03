@@ -1,6 +1,9 @@
 package db
 
-import "context"
+import (
+	"context"
+	"fmt"
+)
 
 // TransferTxParams contains the input parameters of the transfer transaction
 type TransferTxParams struct {
@@ -22,7 +25,30 @@ type TransferTxResult struct {
 // It creates the transfer, add account entries, and update accounts' balance within a database transaction
 func (s *SQLStore) TransferTx(ctx context.Context, arg TransferTxParams) (TransferTxResult, error) {
 	var result TransferTxResult
+	if err := s.execTx(ctx, func(q *Queries) error {
+		var err error
 
+		result.Transfer, err = q.CreateTransfer(ctx, CreateTransferParams{
+			FromAccountID: arg.FromAccountID,
+			ToAccountID:   arg.ToAccountID,
+			Amount:        arg.Amount,
+		})
+
+		if err != nil {
+			return fmt.Errorf("create transfer: %v", err)
+		}
+
+		result.FromEntry, err = q.CreateEntry(ctx, CreateEntryParams{
+			AccountID: arg.FromAccountID,
+			Amount:    arg.Amount,
+		})
+
+		// TO-DO`S: update account balance (involves deadlock)
+		return nil
+
+	}); err != nil {
+		return result, fmt.Errorf("create transfer tx: %v", err)
+	}
 	return result, nil
 }
 
