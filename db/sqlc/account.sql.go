@@ -7,7 +7,6 @@ package db
 
 import (
 	"context"
-	"github.com/jackc/pgx/v5/pgconn"
 )
 
 const addAccountBalance = `-- name: AddAccountBalance :one
@@ -69,9 +68,9 @@ DELETE FROM accounts
 WHERE id = $1
 `
 
-func (q *Queries) DeleteAccount(ctx context.Context, id int64) (pgconn.CommandTag, error) {
-	tag, err := q.db.Exec(ctx, deleteAccount, id)
-	return tag, err
+func (q *Queries) DeleteAccount(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, deleteAccount, id)
+	return err
 }
 
 const getAccount = `-- name: GetAccount :one
