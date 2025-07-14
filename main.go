@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/checkioname/simple-bank/api"
 	db "github.com/checkioname/simple-bank/db/sqlc"
+	"github.com/checkioname/simple-bank/util"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -14,8 +15,13 @@ const (
 )
 
 func main() {
+	config, err := util.LoadConfig()
+	if err != nil {
+		panic(err)
+	}
+
 	ctx := context.Background()
-	conn, err := pgxpool.New(ctx, connStr)
+	conn, err := pgxpool.New(ctx, config.ConnStr)
 	if err != nil {
 		fmt.Errorf("db conn: %v", err)
 		return
