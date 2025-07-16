@@ -2,6 +2,7 @@ package api
 
 import (
 	db "github.com/checkioname/simple-bank/db/sqlc"
+	"github.com/checkioname/simple-bank/util"
 	"github.com/gin-gonic/gin"
 	"log/slog"
 	"net/http"
@@ -9,7 +10,7 @@ import (
 
 type createAccountRequest struct {
 	Owner    string `json:"owner" binding:"required"`
-	Currency string `json:"currency" binding:"required,oneof=USD EUR"`
+	Currency string `json:"currency" binding:"required,currency"`
 }
 
 func (s *Server) createAccount(c *gin.Context) {
@@ -48,11 +49,18 @@ func (s *Server) createUser(c *gin.Context) {
 		return
 	}
 
+	hashed, err := util.HashPassword(req.Password)
+	if err != nil {
+		slog.Error("createUser:", err)
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
 	args := db.CreateUserParams{
 		Username:       req.Username,
 		FullName:       req.FullName,
 		Email:          req.Email,
-		HashedPassword: req.Password,
+		HashedPassword: hashed,
 	}
 
 	result, err := s.store.CreateUser(c, args)

@@ -9,11 +9,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-const (
-	connStr = "postgres://root:secret@localhost/simple_bank?sslmode=disable"
-	addr    = "0.0.0.0:8080"
-)
-
 func main() {
 	config, err := util.LoadConfig()
 	if err != nil {
@@ -31,7 +26,7 @@ func main() {
 	store := db.NewStore(conn)
 	server := api.NewServer(store)
 
-	err = server.Start(addr)
+	err = server.Start(config.Addr)
 	if err != nil {
 		fmt.Errorf("server start: %v", err)
 	}
