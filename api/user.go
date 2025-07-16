@@ -2,9 +2,9 @@ package api
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/checkioname/simple-bank/util"
 	"github.com/gin-gonic/gin"
-	"log/slog"
 	"net/http"
 )
 
@@ -26,7 +26,7 @@ func (server *Server) loginUser(c *gin.Context) {
 
 	user, err := server.store.GetUser(c, req.Username)
 	if err != nil {
-		slog.Error("loginUser:", err)
+		fmt.Errorf("loginUser: %v", err)
 		if err == sql.ErrNoRows {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return

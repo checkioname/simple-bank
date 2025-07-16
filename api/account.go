@@ -1,10 +1,10 @@
 package api
 
 import (
+	"fmt"
 	db "github.com/checkioname/simple-bank/db/sqlc"
 	"github.com/checkioname/simple-bank/util"
 	"github.com/gin-gonic/gin"
-	"log/slog"
 	"net/http"
 )
 
@@ -16,7 +16,7 @@ type createAccountRequest struct {
 func (s *Server) createAccount(c *gin.Context) {
 	var req createAccountRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		slog.Error("createAccount:", err)
+		fmt.Errorf("createAccount: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Could not parse body"})
 		return
 	}
@@ -27,7 +27,7 @@ func (s *Server) createAccount(c *gin.Context) {
 
 	result, err := s.store.CreateAccount(c, args)
 	if err != nil {
-		slog.Error("createAccount:", err)
+		fmt.Errorf("createAccount: %v", err)
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
@@ -45,13 +45,13 @@ type createUserRequest struct {
 func (s *Server) createUser(c *gin.Context) {
 	var req createUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		slog.Error("createUser:", err)
+		fmt.Errorf("createUser: %v", err)
 		return
 	}
 
 	hashed, err := util.HashPassword(req.Password)
 	if err != nil {
-		slog.Error("createUser:", err)
+		fmt.Errorf("createUser: %v", err)
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
@@ -65,7 +65,7 @@ func (s *Server) createUser(c *gin.Context) {
 
 	result, err := s.store.CreateUser(c, args)
 	if err != nil {
-		slog.Error("createUser:", err)
+		fmt.Errorf("createUser: %v", err)
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
