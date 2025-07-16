@@ -1,6 +1,9 @@
 package util
 
-import "github.com/spf13/viper"
+import (
+	"github.com/spf13/viper"
+	"time"
+)
 
 const (
 	connStr = "postgres://root:secret@localhost/simple_bank?sslmode=disable"
@@ -8,8 +11,10 @@ const (
 )
 
 type Config struct {
-	ConnStr string `mapstructure:"CONN_STR"`
-	Addr    string `mapstructure:"ADDR"`
+	ConnStr             string        `mapstructure:"CONN_STR"`
+	Addr                string        `mapstructure:"ADDR"`
+	TokenSymmetricKey   string        `mapstructure:"TOKEN_SYMMETRIC_KEY"`
+	AccessTokenDuration time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
 }
 
 func LoadConfig() (config Config, err error) {

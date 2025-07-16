@@ -59,7 +59,7 @@ func NewPayload(username string, duration time.Duration) (*Payload, error) {
 	}, err
 }
 
-func (p *Payload) Valid(tokenType string) error {
+func (p *Payload) Valid() error {
 	if time.Now().After(p.ExpiredAt) {
 		return ErrExpiredToken
 	}
