@@ -23,21 +23,31 @@ func NewServer(config util.Config, store db.Store) (*Server, error) {
 		return nil, fmt.Errorf("NewServer: %w", err)
 	}
 
-	server := &Server{config: config, store: store, token: tokenMaker}
-	router := gin.Default()
+	server := &Server{config: config,
+		store: store,
+		token: tokenMaker,
+	}
 
 	v, ok := binding.Validator.Engine().(*validator.Validate)
 	if ok {
 		v.RegisterValidation("currency", validCurrency)
 	}
 
+	server.router = server.setupRoutes()
+	return server, nil
+}
+
+func (server *Server) setupRoutes() *gin.Engine {
+	router := gin.Default()
+	router.Use(authMiddleware(server.token))
+
 	router.POST("/accounts", server.createAccount)
+	router.GET("/account/:id", server.getAccount)
 
 	router.POST("/users", server.createUser)
 	router.POST("/users/login", server.loginUser)
 
-	server.router = router
-	return server, nil
+	return router
 }
 
 func (s *Server) Start(address string) error {

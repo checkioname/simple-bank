@@ -3,7 +3,6 @@ package api
 import (
 	"fmt"
 	db "github.com/checkioname/simple-bank/db/sqlc"
-	"github.com/checkioname/simple-bank/util"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -35,41 +34,23 @@ func (s *Server) createAccount(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
-type createUserRequest struct {
-	Username string `json:"username" binding:"required"`
-	Password string `json:"password" binding:"required"`
-	FullName string `json:"full_name" binding:"required"`
-	Email    string `json:"email" binding:"required"`
+type getAccountRequest struct {
+	ID int64 `uri:"id" binding:"required,min=1"`
 }
 
-func (s *Server) createUser(c *gin.Context) {
-	var req createUserRequest
+func (s *Server) getAccount(c *gin.Context) {
+	var req getAccountRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		fmt.Errorf("createUser: %v", err)
-		return
+		fmt.Errorf("getAccount: %v", err)
+		badRequest(c, "Could not parse body")
 	}
-
-	hashed, err := util.HashPassword(req.Password)
+	acc, err := s.store.GetAccount(c, req.ID)
 	if err != nil {
-		fmt.Errorf("createUser: %v", err)
-		c.JSON(http.StatusInternalServerError, err)
+		fmt.Errorf("getAccount: %v", err)
+		badRequest(c, "Account not found")
 		return
 	}
 
-	args := db.CreateUserParams{
-		Username:       req.Username,
-		FullName:       req.FullName,
-		Email:          req.Email,
-		HashedPassword: hashed,
-	}
-
-	result, err := s.store.CreateUser(c, args)
-	if err != nil {
-		fmt.Errorf("createUser: %v", err)
-		c.JSON(http.StatusInternalServerError, err)
-		return
-	}
-
-	c.JSON(http.StatusOK, result)
-
+	c.JSON(http.StatusOK, acc)
+	return
 }

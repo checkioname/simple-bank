@@ -3,6 +3,7 @@ package api
 import (
 	"database/sql"
 	"fmt"
+	db "github.com/checkioname/simple-bank/db/sqlc"
 	"github.com/checkioname/simple-bank/util"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -49,4 +50,43 @@ func (server *Server) loginUser(c *gin.Context) {
 
 	c.JSON(http.StatusOK, loginResponse{accessToken, user.Username})
 	return
+}
+
+type createUserRequest struct {
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
+	FullName string `json:"full_name" binding:"required"`
+	Email    string `json:"email" binding:"required"`
+}
+
+func (s *Server) createUser(c *gin.Context) {
+	var req createUserRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		fmt.Errorf("createUser: %v", err)
+		return
+	}
+
+	hashed, err := util.HashPassword(req.Password)
+	if err != nil {
+		fmt.Errorf("createUser: %v", err)
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	args := db.CreateUserParams{
+		Username:       req.Username,
+		FullName:       req.FullName,
+		Email:          req.Email,
+		HashedPassword: hashed,
+	}
+
+	result, err := s.store.CreateUser(c, args)
+	if err != nil {
+		fmt.Errorf("createUser: %v", err)
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+
 }
