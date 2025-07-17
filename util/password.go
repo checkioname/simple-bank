@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -14,5 +15,10 @@ func HashPassword(password string) (string, error) {
 }
 
 func VerifyPassword(password, hash string) error {
-	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	if err != nil {
+		return fmt.Errorf("VefifyPassword: %v", err)
+	}
+
+	return nil
 }

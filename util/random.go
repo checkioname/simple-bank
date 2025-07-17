@@ -9,11 +9,11 @@ import (
 const alphabet = "abcdefghijqlmnopqrstuvwxyz"
 
 func init() {
-	rand.Seed(time.Now().UnixNano())
+	rand.New(rand.NewSource(time.Now().UnixNano()))
 }
 
-func RandomInt(min, max int64) int64 {
-	return min + rand.Int63n(max-min+1)
+func RandomInt(minValue, maxValue int64) int64 {
+	return minValue + rand.Int63n(maxValue-minValue+1)
 }
 
 func randomString(n int) string {

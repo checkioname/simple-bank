@@ -3,15 +3,16 @@ package db
 import (
 	"context"
 	"fmt"
+	"log"
+	"os"
+	"testing"
+	"time"
+
 	"github.com/checkioname/simple-bank/util"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
-	"log"
-	"os"
-	"testing"
-	"time"
 )
 
 func TestContainer(t *testing.T) {
@@ -34,7 +35,8 @@ func StartDBWithTestContainer(t *testing.T) (*Queries, string, func()) {
 
 	db, teardown, err := initializeDatabase(dsn)
 	if err != nil {
-		err = fmt.Errorf("initialize database: %v", err)
+		log.Printf("initialize database: %v", err)
+		return nil, "", nil
 	}
 
 	return db, dsn, func() {
@@ -98,7 +100,7 @@ func setColimaEnvVars() error {
 	if err != nil {
 		return fmt.Errorf("setting DOCKER_HOST: %w", err)
 	}
-	return err
+	return nil
 }
 
 func initializeDatabase(dsn string) (*Queries, func(), error) {
@@ -107,7 +109,7 @@ func initializeDatabase(dsn string) (*Queries, func(), error) {
 	conn, err := pgx.Connect(ctx, dsn)
 	if err != nil {
 		cancel()
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("initializeDatabase: %v", err)
 	}
 
 	migrationPath := "file://../migration"
@@ -115,13 +117,13 @@ func initializeDatabase(dsn string) (*Queries, func(), error) {
 	if err != nil {
 		conn.Close(ctx)
 		cancel()
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("initializeDatabase: %v", err)
 	}
 
 	if err := m.Up(); err != nil {
 		conn.Close(ctx)
 		cancel()
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("initializeDatabase: %v", err)
 	}
 
 	db := New(conn)
