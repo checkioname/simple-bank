@@ -1,0 +1,19 @@
+linters:
+  enable:
+    - govet
+    - errcheck
+    - staticcheck
+    - gosimple
+    - unused
+    - structcheck
+    - gofmt
+    - goimports
+    - revive
+    - errwrap
+
+revive:
+  config: |
+    rules:
+      - name: error-strings
+      - name: import-shadow
+      - name: indent-error-flow

@@ -2,9 +2,11 @@ package token
 
 import (
 	"errors"
+	"fmt"
+	"time"
+
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"time"
 )
 
 var ErrExpiredToken = errors.New("expired token")
@@ -49,14 +51,14 @@ func (p *Payload) GetAudience() (jwt.ClaimStrings, error) {
 func NewPayload(username string, duration time.Duration) (*Payload, error) {
 	tokenID, err := uuid.NewUUID()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("NewPayload: %v", err)
 	}
 	return &Payload{
 		ID:        tokenID,
 		Username:  username,
 		IssuedAt:  time.Now(),
 		ExpiredAt: time.Now().Add(duration),
-	}, err
+	}, nil
 }
 
 func (p *Payload) Valid() error {

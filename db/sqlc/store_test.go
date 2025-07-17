@@ -2,9 +2,10 @@ package db
 
 import (
 	"context"
-	"github.com/stretchr/testify/require"
 	"sync"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestTransferTx_CreateTransferConcurrent(t *testing.T) {

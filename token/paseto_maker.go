@@ -2,9 +2,10 @@ package token
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/o1egl/paseto"
 	"golang.org/x/crypto/chacha20"
-	"time"
 )
 
 type PasetoMaker struct {
@@ -28,7 +29,11 @@ func (pm *PasetoMaker) CreateToken(username string, duration time.Duration) (str
 		return "", fmt.Errorf("CreateToken: %w", err)
 	}
 
-	return pm.paseto.Encrypt(pm.symmetricKey, payload, nil)
+	token, err := pm.paseto.Encrypt(pm.symmetricKey, payload, nil)
+	if err != nil {
+		return "", fmt.Errorf("CreateToken: %w", err)
+	}
+	return token, nil
 }
 
 func (pm *PasetoMaker) VerifyToken(token string) (*Payload, error) {

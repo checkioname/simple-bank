@@ -3,13 +3,15 @@ package db
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/checkioname/simple-bank/util"
+
 	_ "github.com/golang-migrate/migrate/v4/database/postgres" // driver migrate
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgx/v5"
 	_ "github.com/lib/pq" // Postgres driver
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func createRandomAccount(t *testing.T) Account {

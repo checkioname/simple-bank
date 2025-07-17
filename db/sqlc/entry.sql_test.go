@@ -2,10 +2,11 @@ package db
 
 import (
 	"context"
-	"github.com/stretchr/testify/require"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestQueries_CreateEntry(t *testing.T) {

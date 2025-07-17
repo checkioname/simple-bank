@@ -1,9 +1,10 @@
 package util
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/bcrypt"
-	"testing"
 )
 
 func TestHashPassword(t *testing.T) {

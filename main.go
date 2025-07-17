@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"log"
+
 	"github.com/checkioname/simple-bank/api"
 	db "github.com/checkioname/simple-bank/db/sqlc"
 	"github.com/checkioname/simple-bank/util"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -18,7 +20,7 @@ func main() {
 	ctx := context.Background()
 	conn, err := pgxpool.New(ctx, config.ConnStr)
 	if err != nil {
-		fmt.Errorf("db conn: %v", err)
+		log.Printf("db conn: %v", err)
 		return
 	}
 	defer conn.Close()
@@ -31,6 +33,6 @@ func main() {
 
 	err = server.Start(config.Addr)
 	if err != nil {
-		fmt.Errorf("server start: %v", err)
+		log.Printf("server start: %v", err)
 	}
 }

@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -26,17 +27,21 @@ func NewStore(connPool *pgxpool.Pool) Store {
 func (s *SQLStore) execTx(ctx context.Context, fn func(*Queries) error) error {
 	tx, err := s.connPool.Begin(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("execTx: %v", err)
 	}
 
 	q := New(tx)
 	err = fn(q)
 	if err != nil {
 		if rbErr := tx.Rollback(ctx); rbErr != nil {
-			return fmt.Errorf("tx err: %v, rb err: %v", err, rbErr)
+			return fmt.Errorf("execTx: %v, rb err: %v", err, rbErr)
 		}
-		return err
+		return fmt.Errorf("execTx: %v", err)
 	}
 
-	return tx.Commit(ctx)
+	err = tx.Commit(ctx)
+	if err != nil {
+		return fmt.Errorf("tx err: %v, rb err: %v", err, err)
+	}
+	return nil
 }

@@ -1,13 +1,9 @@
 package util
 
 import (
-	"github.com/spf13/viper"
 	"time"
-)
 
-const (
-	connStr = "postgres://root:secret@localhost/simple_bank?sslmode=disable"
-	addr    = "0.0.0.0:8080"
+	"github.com/spf13/viper"
 )
 
 type Config struct {
