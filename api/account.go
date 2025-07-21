@@ -30,13 +30,14 @@ func (s *Server) createAccount(c *gin.Context) {
 		log.Printf("createAccount: %v", err)
 		errResponse(c, http.StatusBadRequest, ErrInvalidAccount)
 	}
+
+	authPayload := c.MustGet(authPayloadKey).(*token.Payload)
 	args := db.CreateAccountParams{
-		Owner:    req.Owner,
+		Owner:    authPayload.Username,
 		Currency: req.Currency,
 	}
 
 	result, err := s.store.CreateAccount(c.Request.Context(), args)
-
 	if err != nil {
 		pgErr, ok := err.(*pgconn.PgError)
 		fmt.Println(pgErr)
@@ -80,4 +81,32 @@ func (s *Server) getAccount(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, acc)
+}
+
+type listAccountsRequest struct {
+	Owner  string `uri:"owner" binding:"required,min=1"`
+	Limit  int32  `uri:"limit" binding:"required,min=1,max=100"`
+	Offset int32  `uri:"offset" binding:"required,min=1,max=100"`
+}
+
+func (s *Server) listAccounts(c *gin.Context) {
+	var req listAccountsRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		log.Printf("listAccounts: %v", err)
+		errResponse(c, http.StatusBadRequest, ErrInvalidAccount)
+		return
+	}
+
+	authPayload := c.MustGet("authPayload").(*token.Payload)
+
+	args := db.ListAccountsParams(req)
+	args.Owner = authPayload.Username
+	accounts, err := s.store.ListAccounts(c.Request.Context(), args)
+	if err != nil {
+		log.Printf("listAccounts: %v", err)
+		errResponse(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, accounts)
 }
