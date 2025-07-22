@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/checkioname/simple-bank/util"
@@ -14,9 +13,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomAccount(t *testing.T) Account {
+func createRandomAccount(t *testing.T) (Account, CreateAccountParams) {
+	user := createRandomUser(t)
+
 	arg := CreateAccountParams{
-		Owner:    util.RandomOwner(),
+		Owner:    user.Username,
 		Balance:  util.RandomMoney(),
 		Currency: util.RandomCurrency(),
 	}
@@ -32,42 +33,23 @@ func createRandomAccount(t *testing.T) Account {
 	require.NotZero(t, account.ID)
 	require.NotZero(t, account.CreatedAt)
 
-	return account
+	return account, arg
 }
 
 func TestCreateAccount(t *testing.T) {
-	testAccount := CreateAccountParams{
-		util.RandomOwner(),
-		util.RandomMoney(),
-		util.RandomCurrency(),
-	}
-
 	ctx := context.Background()
-	account, err := testQueries.CreateAccount(ctx, testAccount)
-	fmt.Println(account)
+	account, _ := createRandomAccount(t)
 
-	require.NoError(t, err)
-	require.True(t, account.ID == 1, "Does not match ID")
-	require.True(t, account.Balance == testAccount.Balance, "Does not match Balance")
-	require.True(t, account.Currency == testAccount.Currency, "Does not match Currency")
-
-	err = testQueries.DeleteAccount(ctx, account.ID)
+	err := testQueries.DeleteAccount(ctx, account.ID)
 	require.NoError(t, err)
 
 }
 
 func TestDeleteAccount(t *testing.T) {
-	testAccount := CreateAccountParams{
-		util.RandomOwner(),
-		util.RandomMoney(),
-		util.RandomCurrency(),
-	}
-
 	ctx := context.Background()
-	account, err := testQueries.CreateAccount(ctx, testAccount)
-	require.NoError(t, err)
+	account, _ := createRandomAccount(t)
 
-	err = testQueries.DeleteAccount(ctx, account.ID)
+	err := testQueries.DeleteAccount(ctx, account.ID)
 	require.NoError(t, err, "Error deleting account")
 
 	_, err = testQueries.GetAccount(ctx, account.ID)
@@ -76,14 +58,8 @@ func TestDeleteAccount(t *testing.T) {
 }
 
 func TestGetAccount(t *testing.T) {
-	testAccount := CreateAccountParams{
-		util.RandomOwner(),
-		util.RandomMoney(),
-		util.RandomCurrency(),
-	}
 	ctx := context.Background()
-	account, err := testQueries.CreateAccount(ctx, testAccount)
-	require.NoError(t, err)
+	account, testAccount := createRandomAccount(t)
 
 	acc, err := testQueries.GetAccount(ctx, account.ID)
 	require.NoError(t, err)
@@ -96,15 +72,8 @@ func TestGetAccount(t *testing.T) {
 }
 
 func TestUpdateAccount(t *testing.T) {
-	testAccount := CreateAccountParams{
-		util.RandomOwner(),
-		util.RandomMoney(),
-		util.RandomCurrency(),
-	}
-
 	ctx := context.Background()
-	account, err := testQueries.CreateAccount(ctx, testAccount)
-	require.NoError(t, err)
+	account, _ := createRandomAccount(t)
 
 	updParams := UpdateAccountParams{
 		ID:      account.ID,

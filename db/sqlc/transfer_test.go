@@ -10,8 +10,8 @@ import (
 func TestTransfer_CreateTransfer(t *testing.T) {
 	ctx := context.Background()
 
-	acc1 := createRandomAccount(t)
-	acc2 := createRandomAccount(t)
+	acc1, _ := createRandomAccount(t)
+	acc2, _ := createRandomAccount(t)
 
 	transfer := CreateTransferParams{
 		FromAccountID: acc1.ID,
@@ -31,8 +31,8 @@ func TestTransfer_CreateTransfer(t *testing.T) {
 
 func TestTransferTx_ListTransfer(t *testing.T) {
 	ctx := context.Background()
-	acc1 := createRandomAccount(t)
-	acc2 := createRandomAccount(t)
+	acc1, _ := createRandomAccount(t)
+	acc2, _ := createRandomAccount(t)
 
 	p := ListTransfersParams{
 		FromAccountID: acc1.ID,
@@ -63,8 +63,8 @@ func TestTransferTx_ListTransfer(t *testing.T) {
 func TestQueries_GetTransfer(t *testing.T) {
 	ctx := context.Background()
 
-	acc1 := createRandomAccount(t)
-	acc2 := createRandomAccount(t)
+	acc1, _ := createRandomAccount(t)
+	acc2, _ := createRandomAccount(t)
 
 	result, err := testQueries.GetTransfer(ctx, -1)
 	require.Error(t, err)    //no rows in result set

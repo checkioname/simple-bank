@@ -11,7 +11,7 @@ import (
 
 func TestQueries_CreateEntry(t *testing.T) {
 	ctx := context.Background()
-	acc := createRandomAccount(t)
+	acc, _ := createRandomAccount(t)
 
 	type args struct {
 		ctx context.Context
