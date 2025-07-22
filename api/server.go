@@ -57,6 +57,7 @@ func (s *Server) setupRoutes() *gin.Engine {
 	router.Group("/").Use(authMiddleware(s.token))
 
 	router.POST("/accounts", s.createAccount)
+	router.GET("/accounts", s.listAccounts)
 	router.GET("/accounts/:id", s.getAccount)
 
 	return router
