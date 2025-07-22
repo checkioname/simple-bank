@@ -3,8 +3,9 @@ package token
 import (
 	"errors"
 	"fmt"
-	"github.com/golang-jwt/jwt/v5"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 const minSecretLength = 5
@@ -24,14 +25,18 @@ func NewJwtMaker(secretKey string) (Maker, error) {
 	}, nil
 }
 
-func (m *JwtMaker) CreateToken(username string, duration time.Duration) (string, error) {
+func (m *JwtMaker) CreateToken(username string, duration time.Duration) (string, *Payload, error) {
 	payload, err := NewPayload(username, duration)
 	if err != nil {
-		return "", fmt.Errorf("createToken: %v", err)
+		return "", payload, fmt.Errorf("createToken: %v", err)
 	}
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, payload)
-	return jwtToken.SignedString([]byte(m.secretKey))
+	signedToken, err := jwtToken.SignedString([]byte(m.secretKey))
+	if err != nil {
+		return "", payload, fmt.Errorf("createToken: %v", err)
+	}
+	return signedToken, payload, nil
 }
 
 func (m *JwtMaker) VerifyToken(token string) (*Payload, error) {

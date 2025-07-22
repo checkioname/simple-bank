@@ -2,17 +2,18 @@ package db
 
 import (
 	"context"
-	"github.com/stretchr/testify/require"
 	"sync"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestTransferTx_CreateTransferConcurrent(t *testing.T) {
 	ctx := context.Background()
 	clearTables(ctx, t)
 
-	acc1 := createRandomAccount(t)
-	acc2 := createRandomAccount(t)
+	acc1, _ := createRandomAccount(t)
+	acc2, _ := createRandomAccount(t)
 
 	n := 5
 	amount := int64(10)

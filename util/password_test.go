@@ -1,9 +1,9 @@
 package util
 
 import (
-	"github.com/stretchr/testify/require"
-	"golang.org/x/crypto/bcrypt"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestHashPassword(t *testing.T) {
@@ -18,5 +18,5 @@ func TestHashPassword(t *testing.T) {
 	wrongPassword := "password1010"
 	err = VerifyPassword(wrongPassword, hash)
 	require.Error(t, err)
-	require.Equal(t, err, bcrypt.ErrMismatchedHashAndPassword)
+	require.Equal(t, "VerifyPassword: crypto/bcrypt: hashedPassword is not the hash of the given password", err.Error())
 }

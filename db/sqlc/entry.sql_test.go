@@ -2,15 +2,16 @@ package db
 
 import (
 	"context"
-	"github.com/stretchr/testify/require"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestQueries_CreateEntry(t *testing.T) {
 	ctx := context.Background()
-	acc := createRandomAccount(t)
+	acc, _ := createRandomAccount(t)
 
 	type args struct {
 		ctx context.Context
