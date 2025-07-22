@@ -49,14 +49,15 @@ func NewServer(config util.Config, store db.Store) (*Server, error) {
 func (s *Server) setupRoutes() *gin.Engine {
 	router := gin.Default()
 
-	router.POST("/accounts", s.createAccount)
-	router.GET("/accounts/:id", s.getAccount)
+	router.POST("/users", s.createUser)
+	router.POST("/users/login", s.loginUser)
+	router.POST("/tokens/renew_access", s.renewAccessToken)
 
 	// Requests to the routes bellow will pass on this middleware before
 	router.Group("/").Use(authMiddleware(s.token))
 
-	router.POST("/users", s.createUser)
-	router.POST("/users/login", s.loginUser)
+	router.POST("/accounts", s.createAccount)
+	router.GET("/accounts/:id", s.getAccount)
 
 	return router
 }

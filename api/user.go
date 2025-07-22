@@ -3,11 +3,14 @@ package api
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	db "github.com/checkioname/simple-bank/db/sqlc"
 	"github.com/checkioname/simple-bank/util"
+	"github.com/google/uuid"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -21,8 +24,12 @@ type loginRequest struct {
 }
 
 type loginResponse struct {
-	AccessToken string `json:"access_token"`
-	User        string `json:"user"`
+	SessionID             uuid.UUID `json:"session_id"`
+	AccessToken           string    `json:"access_token"`
+	AccessTokenExpiresAt  time.Time `json:"access_token_expires_at"`
+	RefreshToken          string    `json:"refresh_token"`
+	RefreshTokenExpiresAt time.Time `json:"refresh_token_expires_at"`
+	User                  string    `json:"user"`
 }
 
 func (s *Server) loginUser(c *gin.Context) {
@@ -49,13 +56,45 @@ func (s *Server) loginUser(c *gin.Context) {
 		return
 	}
 
-	accessToken, err := s.token.CreateToken(user.Username, s.config.AccessTokenDuration)
+	accessToken, payload, err := s.token.CreateToken(user.Username, s.config.AccessTokenDuration)
+	fmt.Println(payload)
 	if err != nil {
 		errResponse(c, http.StatusInternalServerError, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, loginResponse{accessToken, user.Username})
+	refreshToken, refreshPayload, err := s.token.CreateToken(user.Username, s.config.AccessTokenDuration)
+	fmt.Println(payload)
+	if err != nil {
+		errResponse(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	sessionParams := db.CreateSessionParams{
+		ID:           refreshPayload.ID,
+		Username:     user.Username,
+		RefreshToken: refreshToken,
+		UserAgent:    c.Request.UserAgent(),
+		ClientIp:     c.ClientIP(),
+		IsBlocked:    false,
+		ExpiresAt:    refreshPayload.ExpiredAt,
+	}
+	session, err := s.store.CreateSession(c.Request.Context(), sessionParams)
+	if err != nil {
+		errResponse(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	rsp := loginResponse{
+		SessionID:             session.ID,
+		AccessToken:           accessToken,
+		AccessTokenExpiresAt:  payload.ExpiredAt,
+		RefreshToken:          refreshToken,
+		RefreshTokenExpiresAt: refreshPayload.ExpiredAt,
+		User:                  user.Username,
+	}
+
+	c.JSON(http.StatusOK, rsp)
 }
 
 type createUserRequest struct {
